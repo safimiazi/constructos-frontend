@@ -1,0 +1,277 @@
+@import "tailwindcss";
+
+/* ─── Purple Premium Theme ─────────────────────────────────────────────────── */
+
+:root {
+  /* Brand */
+  --brand-50:  #faf5ff;
+  --brand-100: #f3e8ff;
+  --brand-200: #e9d5ff;
+  --brand-300: #d8b4fe;
+  --brand-400: #c084fc;
+  --brand-500: #a855f7;
+  --brand-600: #9333ea;
+  --brand-700: #7e22ce;
+  --brand-800: #6b21a8;
+  --brand-900: #581c87;
+
+  /* Surface */
+  --bg-base:       #ffffff;
+  --bg-subtle:     #faf5ff;
+  --bg-muted:      #f3e8ff;
+  --bg-card:       #ffffff;
+  --bg-overlay:    rgba(0,0,0,0.45);
+
+  /* Sidebar */
+  --sidebar-bg:    #1a0533;
+  --sidebar-hover: #2d0a52;
+  --sidebar-active:#7e22ce;
+  --sidebar-text:  #e9d5ff;
+  --sidebar-muted: #a78bca;
+  --sidebar-border:#2d0a52;
+
+  /* Text */
+  --text-primary:   #1a0533;
+  --text-secondary: #6b21a8;
+  --text-muted:     #9ca3af;
+  --text-inverse:   #ffffff;
+
+  /* Border */
+  --border:         #e9d5ff;
+  --border-strong:  #d8b4fe;
+
+  /* Status */
+  --success-bg: #f0fdf4; --success-text: #166534; --success-border: #bbf7d0;
+  --error-bg:   #fef2f2; --error-text:   #991b1b; --error-border:   #fecaca;
+  --warn-bg:    #fffbeb; --warn-text:    #92400e; --warn-border:    #fde68a;
+  --info-bg:    #faf5ff; --info-text:    #6b21a8; --info-border:    #e9d5ff;
+
+  /* Input */
+  --input-bg:     #ffffff;
+  --input-border: #d8b4fe;
+  --input-focus:  #9333ea;
+  --input-text:   #1a0533;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 3px rgba(88,28,135,0.08), 0 1px 2px rgba(88,28,135,0.04);
+  --shadow-md: 0 4px 16px rgba(88,28,135,0.12), 0 2px 6px rgba(88,28,135,0.06);
+  --shadow-lg: 0 10px 40px rgba(88,28,135,0.16), 0 4px 12px rgba(88,28,135,0.08);
+}
+
+/* ─── Dark Mode ─────────────────────────────────────────────────────────────── */
+
+.dark {
+  --bg-base:    #0d0117;
+  --bg-subtle:  #130222;
+  --bg-muted:   #1e0535;
+  --bg-card:    #160328;
+  --bg-overlay: rgba(0,0,0,0.65);
+
+  --sidebar-bg:    #0a0115;
+  --sidebar-hover: #1e0535;
+  --sidebar-active:#7e22ce;
+  --sidebar-text:  #e9d5ff;
+  --sidebar-muted: #9d6fc7;
+  --sidebar-border:#1e0535;
+
+  --text-primary:   #f3e8ff;
+  --text-secondary: #c084fc;
+  --text-muted:     #6b7280;
+  --text-inverse:   #0d0117;
+
+  --border:        #2d0a52;
+  --border-strong: #4c1d95;
+
+  --success-bg: #052e16; --success-text: #86efac; --success-border: #166534;
+  --error-bg:   #450a0a; --error-text:   #fca5a5; --error-border:   #991b1b;
+  --warn-bg:    #451a03; --warn-text:    #fcd34d; --warn-border:    #92400e;
+  --info-bg:    #1e0535; --info-text:    #d8b4fe; --info-border:    #4c1d95;
+
+  --input-bg:     #1e0535;
+  --input-border: #4c1d95;
+  --input-focus:  #a855f7;
+  --input-text:   #f3e8ff;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.6);
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--brand-500); }
+
+/* ─── Utility classes ────────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.input-base {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--input-text);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.input-base:focus {
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 3px rgba(147,51,234,0.15);
+}
+.input-base::placeholder { color: var(--text-muted); }
+
+/* input-field is an alias for input-base */
+.input-field {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--input-text);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.input-field:focus {
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 3px rgba(147,51,234,0.15);
+}
+.input-field::placeholder { color: var(--text-muted); }
+
+/* Fix date/month/time inputs in dark mode — browser renders them with system colors */
+input[type="date"],
+input[type="month"],
+input[type="time"],
+input[type="datetime-local"] {
+  color: var(--input-text);
+}
+
+/* Light mode: use light color-scheme so browser picker is readable */
+input[type="date"],
+input[type="month"],
+input[type="time"],
+input[type="datetime-local"] {
+  color-scheme: light;
+}
+
+/* Dark mode: switch to dark color-scheme */
+.dark input[type="date"],
+.dark input[type="month"],
+.dark input[type="time"],
+.dark input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(147,51,234,0.3);
+}
+.btn-primary:hover { background: linear-gradient(135deg, var(--brand-700), var(--brand-800)); box-shadow: 0 4px 12px rgba(147,51,234,0.4); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-strong);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-secondary:hover { background: var(--bg-muted); border-color: var(--brand-400); }
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  background: transparent;
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  border: 1px solid #fecaca;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-danger:hover { background: #fef2f2; }
+.dark .btn-danger { color: #fca5a5; border-color: #991b1b; }
+.dark .btn-danger:hover { background: #450a0a; }
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.025em;
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────────── */
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+.animate-fade-in { animation: fadeIn 0.2s ease forwards; }
+.animate-slide-in { animation: slideIn 0.2s ease forwards; }
+.animate-scale-in { animation: scaleIn 0.15s ease forwards; }
+
+/* ─── Print Styles ───────────────────────────────────────────────────────────── */
+
+@media print {
+  .no-print { display: none !important; }
+
+  /* Receipt print mode — popup window handles its own styles */
+  body.receipt-print > *:not(#receipt-print-root) { display: none !important; }
+  #receipt-print-root {
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+    z-index: 9999 !important;
+  }
+}
