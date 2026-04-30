@@ -1,14 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useVendors, useCreateVendor, useDeleteVendor } from '@/hooks/use-procurement';
+import { useVendors, useCreateVendor, useUpdateVendor, useDeleteVendor } from '@/hooks/use-procurement';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
-import { Package, Plus, Search, Trash2 } from 'lucide-react';
+import { Package, Plus, Search, Trash2, Edit2, Check, X } from 'lucide-react';
 
 export default function SuppliersPage() {
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', phone: '', email: '', address: '', contactPerson: '' });
 
   const { data, isLoading } = useVendors({ search: search || undefined });
@@ -56,10 +57,22 @@ export default function SuppliersPage() {
           { key: 'email', label: 'Email', render: (r: any) => <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{r.email ?? '—'}</span> },
           { key: 'isActive', label: 'Status', render: (r: any) => <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: r.isActive ? 'rgba(34,197,94,0.12)' : 'rgba(107,114,128,0.12)', color: r.isActive ? '#16a34a' : '#6b7280' }}>{r.isActive ? 'Active' : 'Inactive'}</span> },
           { key: 'actions', label: '', render: (r: any) => (
-            <button onClick={() => del.mutate(r.id)} className="p-1.5 rounded hover:bg-red-50 transition-colors" style={{ color: '#dc2626' }}><Trash2 size={14} /></button>
+            <div className="flex gap-1">
+              <VendorToggle id={r.id} isActive={r.isActive} />
+              <button onClick={() => del.mutate(r.id)} className="p-1.5 rounded hover:bg-red-50" style={{ color: '#dc2626' }}><Trash2 size={14} /></button>
+            </div>
           )},
         ]}
       />
     </div>
+  );
+}
+
+function VendorToggle({ id, isActive }: { id: string; isActive: boolean }) {
+  const update = useUpdateVendor(id);
+  return (
+    <button onClick={() => update.mutate({ isActive: !isActive } as any)} className="p-1.5 rounded hover:bg-(--bg-muted)" style={{ color: isActive ? '#f59e0b' : '#16a34a' }} title={isActive ? 'Deactivate' : 'Activate'}>
+      {isActive ? <X size={14} /> : <Check size={14} />}
+    </button>
   );
 }

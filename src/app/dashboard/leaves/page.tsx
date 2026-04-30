@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useLeaves, useApproveLeave, useRejectLeave, useEmployees } from '@/hooks/use-employees';
+import { useLeaves, useApproveLeave, useRejectLeave } from '@/hooks/use-employees';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Select } from '@/components/ui/select';
 import { Briefcase, Plus, Check, X } from 'lucide-react';
+import { STATUS_OPTIONS, LEAVE_TYPE_OPTIONS, useEmployeeOptions } from '@/hooks/use-select-options';
 import { apiClient } from '@/lib/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -15,8 +17,7 @@ export default function LeavesPage() {
   const [form, setForm] = useState({ employeeId: '', leaveType: 'casual', startDate: '', endDate: '', totalDays: '', reason: '' });
 
   const { data, isLoading } = useLeaves({ status: statusFilter || undefined });
-  const { data: empData } = useEmployees();
-  const employees = empData?.data?.data ?? [];
+  const { options: empOptions, isLoading: empLoading } = useEmployeeOptions();
   const leaves = (data?.data as any) ?? [];
 
   const approve = useApproveLeave();
@@ -36,13 +37,19 @@ export default function LeavesPage() {
         <div className="card p-5">
           <form onSubmit={e => { e.preventDefault(); create.mutate({ ...form, totalDays: Number(form.totalDays) }); }}
             className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <select className="input-base" required value={form.employeeId} onChange={e => setForm(p => ({ ...p, employeeId: e.target.value }))}>
-              <option value="">Select employee *</option>
-              {employees.map((emp: any) => <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>)}
-            </select>
-            <select className="input-base" value={form.leaveType} onChange={e => setForm(p => ({ ...p, leaveType: e.target.value }))}>
-              {['sick','casual','annual','unpaid','maternity'].map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
+            <Select
+              options={empOptions}
+              value={form.employeeId}
+              onChange={v => setForm(p => ({ ...p, employeeId: v }))}
+              placeholder="Select employee *"
+              loading={empLoading}
+            />
+            <Select
+              options={LEAVE_TYPE_OPTIONS}
+              value={form.leaveType}
+              onChange={v => setForm(p => ({ ...p, leaveType: v }))}
+              placeholder="Leave type"
+            />
             <input className="input-base" type="date" required value={form.startDate} onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} />
             <input className="input-base" type="date" required value={form.endDate} onChange={e => setForm(p => ({ ...p, endDate: e.target.value }))} />
             <input className="input-base" type="number" placeholder="Total days *" required value={form.totalDays} onChange={e => setForm(p => ({ ...p, totalDays: e.target.value }))} />
@@ -55,14 +62,22 @@ export default function LeavesPage() {
         </div>
       )}
 
-      <select className="input-base w-44" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-        <option value="">All Status</option>
-        {['pending','approved','rejected','cancelled'].map(s => <option key={s} value={s}>{s}</option>)}
-      </select>
+      <div className="sm:w-48">
+        <Select
+          options={[{ value: '', label: 'All Status' }, ...STATUS_OPTIONS.leave]}
+          value={statusFilter}
+          onChange={setStatusFilter}
+          placeholder="All Status"
+          searchable={false}
+        />
+      </div>
 
       <DataTable data={leaves} isLoading={isLoading} emptyIcon={<Briefcase size={40} />} emptyText="No leave requests."
         columns={[
-          { key: 'employeeId', label: 'Employee', render: (r: any) => <span style={{ color: 'var(--text-secondary)' }}>{r.employeeId}</span> },
+          { key: 'employeeId', label: 'Employee', render: (r: any) => {
+            const emp = empOptions.find(e => e.value === r.employeeId);
+            return <span style={{ color: 'var(--text-secondary)' }}>{emp?.label ?? r.employeeId?.slice(0,8)}</span>;
+          }},
           { key: 'leaveType', label: 'Type', render: (r: any) => <span className="capitalize" style={{ color: 'var(--text-secondary)' }}>{r.leaveType}</span> },
           { key: 'startDate', label: 'From', render: (r: any) => <span className="text-xs">{new Date(r.startDate).toLocaleDateString()}</span> },
           { key: 'endDate', label: 'To', render: (r: any) => <span className="text-xs">{new Date(r.endDate).toLocaleDateString()}</span> },
@@ -70,8 +85,8 @@ export default function LeavesPage() {
           { key: 'status', label: 'Status', render: (r: any) => <StatusBadge status={r.status} /> },
           { key: 'actions', label: '', render: (r: any) => r.status === 'pending' ? (
             <div className="flex gap-1">
-              <button onClick={() => approve.mutate(r.id)} className="p-1.5 rounded hover:bg-green-50 transition-colors" style={{ color: '#16a34a' }}><Check size={14} /></button>
-              <button onClick={() => reject.mutate({ id: r.id, reason: 'Rejected by manager' })} className="p-1.5 rounded hover:bg-red-50 transition-colors" style={{ color: '#dc2626' }}><X size={14} /></button>
+              <button onClick={() => approve.mutate(r.id)} className="p-1.5 rounded hover:bg-green-50" style={{ color: '#16a34a' }}><Check size={14} /></button>
+              <button onClick={() => reject.mutate({ id: r.id, reason: 'Rejected by manager' })} className="p-1.5 rounded hover:bg-red-50" style={{ color: '#dc2626' }}><X size={14} /></button>
             </div>
           ) : null },
         ]}

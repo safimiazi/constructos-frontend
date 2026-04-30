@@ -5,27 +5,31 @@ import { useProjects, useCreateProject, useDeleteProject } from '@/hooks/use-pro
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Select } from '@/components/ui/select';
 import { FolderKanban, Plus, Search, Trash2 } from 'lucide-react';
+import { STATUS_OPTIONS, PROJECT_TYPE_OPTIONS, useUserOptions, useClientOptions } from '@/hooks/use-select-options';
 import type { Project } from '@/lib/api';
 
 export default function ProjectsPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: '', type: 'residential', location: '', budgetAmount: '', startDate: '', endDate: '' });
+  const [form, setForm] = useState({ name: '', type: 'residential', location: '', budgetAmount: '', startDate: '', endDate: '', projectManagerId: '', clientId: '' });
 
   const { data, isLoading } = useProjects({ status: status || undefined });
   const create = useCreateProject();
   const del = useDeleteProject();
+  const { options: userOptions, isLoading: uLoading } = useUserOptions();
+  const { options: clientOptions, isLoading: cLoading } = useClientOptions();
 
   const projects: Project[] = data?.data?.data ?? [];
   const filtered = projects.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    await create.mutateAsync({ ...form, budgetAmount: Number(form.budgetAmount) } as any);
+    await create.mutateAsync({ ...form, budgetAmount: Number(form.budgetAmount), projectManagerId: form.projectManagerId || undefined, clientId: form.clientId || undefined } as any);
     setShowForm(false);
-    setForm({ name: '', type: 'residential', location: '', budgetAmount: '', startDate: '', endDate: '' });
+    setForm({ name: '', type: 'residential', location: '', budgetAmount: '', startDate: '', endDate: '', projectManagerId: '', clientId: '' });
   };
 
   return (
@@ -38,13 +42,19 @@ export default function ProjectsPage() {
           <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Create Project</h2>
           <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input className="input-base" placeholder="Project name *" required value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
-            <select className="input-base" value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
-              {['residential','commercial','industrial','infrastructure','renovation'].map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
+            <Select
+              options={PROJECT_TYPE_OPTIONS}
+              value={form.type}
+              onChange={v => setForm(p => ({ ...p, type: v }))}
+              placeholder="Project type"
+              label=""
+            />
             <input className="input-base" placeholder="Location" value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} />
             <input className="input-base" type="number" placeholder="Budget (BDT)" value={form.budgetAmount} onChange={e => setForm(p => ({ ...p, budgetAmount: e.target.value }))} />
-            <input className="input-base" type="date" placeholder="Start date" value={form.startDate} onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} />
-            <input className="input-base" type="date" placeholder="End date" value={form.endDate} onChange={e => setForm(p => ({ ...p, endDate: e.target.value }))} />
+            <input className="input-base" type="date" value={form.startDate} onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} />
+            <input className="input-base" type="date" value={form.endDate} onChange={e => setForm(p => ({ ...p, endDate: e.target.value }))} />
+            <Select options={userOptions} value={form.projectManagerId} onChange={v => setForm(p => ({ ...p, projectManagerId: v }))} placeholder="Project Manager (optional)" loading={uLoading} clearable label="Project Manager" />
+            <Select options={clientOptions} value={form.clientId} onChange={v => setForm(p => ({ ...p, clientId: v }))} placeholder="Client (optional)" loading={cLoading} clearable label="Client" />
             <div className="sm:col-span-2 flex gap-2">
               <button type="submit" disabled={create.isPending} className="btn-primary">{create.isPending ? 'Creating…' : 'Create'}</button>
               <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
@@ -58,10 +68,15 @@ export default function ProjectsPage() {
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
           <input className="input-base pl-9" placeholder="Search projects…" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <select className="input-base sm:w-44" value={status} onChange={e => setStatus(e.target.value)}>
-          <option value="">All Status</option>
-          {['planning','active','on_hold','completed','cancelled'].map(s => <option key={s} value={s}>{s.replace('_',' ')}</option>)}
-        </select>
+        <div className="sm:w-48">
+          <Select
+            options={[{ value: '', label: 'All Status' }, ...STATUS_OPTIONS.project]}
+            value={status}
+            onChange={setStatus}
+            placeholder="All Status"
+            searchable={false}
+          />
+        </div>
       </div>
 
       <DataTable

@@ -1,6 +1,6 @@
 'use client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
+import { apiClient, extendedApiClient } from '@/lib/api';
 
 export const projectKeys = {
   all: ['projects'] as const,
@@ -73,5 +73,73 @@ export function useCreateDailyLog(projectId: string) {
   return useMutation({
     mutationFn: (body: Parameters<typeof apiClient.createDailyLog>[1]) => apiClient.createDailyLog(projectId, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: projectKeys.logs(projectId) }),
+  });
+}
+
+export function useMilestones(projectId: string) {
+  return useQuery({ queryKey: [...projectKeys.all, projectId, 'milestones'], queryFn: () => extendedApiClient.getMilestones(projectId), enabled: !!projectId });
+}
+
+export function useCreateMilestone(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: any) => extendedApiClient.createMilestone(projectId, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...projectKeys.all, projectId, 'milestones'] }),
+  });
+}
+
+export function useUpdateMilestone(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ mid, body }: { mid: string; body: any }) => extendedApiClient.updateMilestone(projectId, mid, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...projectKeys.all, projectId, 'milestones'] }),
+  });
+}
+
+export function useIssues(projectId: string) {
+  return useQuery({ queryKey: [...projectKeys.all, projectId, 'issues'], queryFn: () => extendedApiClient.getIssues(projectId), enabled: !!projectId });
+}
+
+export function useCreateIssue(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: any) => extendedApiClient.createIssue(projectId, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...projectKeys.all, projectId, 'issues'] }),
+  });
+}
+
+export function useUpdateIssue(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ iid, body }: { iid: string; body: any }) => extendedApiClient.updateIssue(projectId, iid, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...projectKeys.all, projectId, 'issues'] }),
+  });
+}
+
+export function useDefects(projectId: string) {
+  return useQuery({ queryKey: [...projectKeys.all, projectId, 'defects'], queryFn: () => extendedApiClient.getDefects(projectId), enabled: !!projectId });
+}
+
+export function useCreateDefect(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: any) => extendedApiClient.createDefect(projectId, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...projectKeys.all, projectId, 'defects'] }),
+  });
+}
+
+export function useUpdateDefect(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ did, body }: { did: string; body: any }) => extendedApiClient.updateDefect(projectId, did, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...projectKeys.all, projectId, 'defects'] }),
+  });
+}
+
+export function useDeleteDefect(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (did: string) => extendedApiClient.deleteDefect(projectId, did),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...projectKeys.all, projectId, 'defects'] }),
   });
 }

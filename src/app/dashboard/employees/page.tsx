@@ -5,30 +5,32 @@ import { useEmployees, useCreateEmployee, useDeleteEmployee } from '@/hooks/use-
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Select } from '@/components/ui/select';
 import { HardHat, Plus, Search, Trash2 } from 'lucide-react';
+import { EMPLOYMENT_TYPE_OPTIONS, STATUS_OPTIONS, useDepartmentOptions } from '@/hooks/use-select-options';
 import type { Employee } from '@/lib/api';
 
-const BLANK = { firstName: '', lastName: '', email: '', phone: '', employeeCode: '', designation: '', employmentType: 'full_time', basicSalary: '', joinDate: '' };
+const BLANK = { firstName: '', lastName: '', email: '', phone: '', employeeCode: '', designation: '', employmentType: 'full_time', basicSalary: '', joinDate: '', departmentId: '' };
 
 export default function EmployeesPage() {
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(BLANK);
 
   const { data, isLoading } = useEmployees({ search: search || undefined });
   const create = useCreateEmployee();
   const del = useDeleteEmployee();
+  const { options: deptOptions, isLoading: deptLoading } = useDepartmentOptions();
 
   const employees: Employee[] = data?.data?.data ?? [];
+  const filtered = statusFilter ? employees.filter(e => e.status === statusFilter) : employees;
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     await create.mutateAsync({ ...form, basicSalary: Number(form.basicSalary) } as any);
     setShowForm(false); setForm(BLANK);
   };
-
-  const f = (k: keyof typeof BLANK) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm(p => ({ ...p, [k]: e.target.value }));
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -39,17 +41,28 @@ export default function EmployeesPage() {
         <div className="card p-5">
           <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Add Employee</h2>
           <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input className="input-base" placeholder="First name *" required value={form.firstName} onChange={f('firstName')} />
-            <input className="input-base" placeholder="Last name *" required value={form.lastName} onChange={f('lastName')} />
-            <input className="input-base" type="email" placeholder="Email *" required value={form.email} onChange={f('email')} />
-            <input className="input-base" placeholder="Phone" value={form.phone} onChange={f('phone')} />
-            <input className="input-base" placeholder="Employee code *" required value={form.employeeCode} onChange={f('employeeCode')} />
-            <input className="input-base" placeholder="Designation" value={form.designation} onChange={f('designation')} />
-            <select className="input-base" value={form.employmentType} onChange={f('employmentType')}>
-              {['full_time','part_time','contract','daily_labor'].map(t => <option key={t} value={t}>{t.replace('_',' ')}</option>)}
-            </select>
-            <input className="input-base" type="number" placeholder="Basic salary (BDT)" value={form.basicSalary} onChange={f('basicSalary')} />
-            <input className="input-base" type="date" placeholder="Join date *" required value={form.joinDate} onChange={f('joinDate')} />
+            <input className="input-base" placeholder="First name *" required value={form.firstName} onChange={e => setForm(p => ({ ...p, firstName: e.target.value }))} />
+            <input className="input-base" placeholder="Last name *" required value={form.lastName} onChange={e => setForm(p => ({ ...p, lastName: e.target.value }))} />
+            <input className="input-base" type="email" placeholder="Email *" required value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} />
+            <input className="input-base" placeholder="Phone" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} />
+            <input className="input-base" placeholder="Employee code *" required value={form.employeeCode} onChange={e => setForm(p => ({ ...p, employeeCode: e.target.value }))} />
+            <input className="input-base" placeholder="Designation" value={form.designation} onChange={e => setForm(p => ({ ...p, designation: e.target.value }))} />
+            <Select
+              options={EMPLOYMENT_TYPE_OPTIONS}
+              value={form.employmentType}
+              onChange={v => setForm(p => ({ ...p, employmentType: v }))}
+              placeholder="Employment type"
+            />
+            <Select
+              options={deptOptions}
+              value={form.departmentId}
+              onChange={v => setForm(p => ({ ...p, departmentId: v }))}
+              placeholder="Department"
+              loading={deptLoading}
+              clearable
+            />
+            <input className="input-base" type="number" placeholder="Basic salary (BDT)" value={form.basicSalary} onChange={e => setForm(p => ({ ...p, basicSalary: e.target.value }))} />
+            <input className="input-base" type="date" placeholder="Join date *" required value={form.joinDate} onChange={e => setForm(p => ({ ...p, joinDate: e.target.value }))} />
             <div className="sm:col-span-2 flex gap-2">
               <button type="submit" disabled={create.isPending} className="btn-primary">{create.isPending ? 'Saving…' : 'Save'}</button>
               <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
@@ -58,13 +71,24 @@ export default function EmployeesPage() {
         </div>
       )}
 
-      <div className="relative max-w-sm">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
-        <input className="input-base pl-9" placeholder="Search employees…" value={search} onChange={e => setSearch(e.target.value)} />
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+          <input className="input-base pl-9" placeholder="Search employees…" value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <div className="sm:w-48">
+          <Select
+            options={[{ value: '', label: 'All Status' }, ...STATUS_OPTIONS.employee]}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            placeholder="All Status"
+            searchable={false}
+          />
+        </div>
       </div>
 
       <DataTable
-        data={employees as any}
+        data={filtered as any}
         isLoading={isLoading}
         emptyIcon={<HardHat size={40} />}
         emptyText="No employees found."

@@ -29,7 +29,7 @@ const NAV: NavItem[] = [
   // SuperAdmin only
   { label: 'Tenants',       icon: Building2,       href: '/dashboard/organizations', roles: ['SUPERADMIN'] },
   { label: 'Plans',         icon: Package,         href: '/dashboard/packages',      roles: ['SUPERADMIN'] },
-  { label: 'Announcements', icon: Megaphone,       href: '/dashboard/announcements', roles: ['SUPERADMIN'] },
+  { label: 'Announcements', icon: Megaphone,       href: '/dashboard/announcements-manage', roles: ['SUPERADMIN'] },
   { label: 'Audit Logs',    icon: ClipboardList,   href: '/dashboard/audit-logs',    roles: ['SUPERADMIN','OWNER','ADMIN'] },
   // Tenant
   { label: 'Projects',      icon: FolderKanban,    href: '/dashboard/projects',          roles: ['OWNER','ADMIN','PROJECT_MANAGER','SITE_ENGINEER','FINANCE_MANAGER'] },
@@ -38,8 +38,8 @@ const NAV: NavItem[] = [
   { label: 'Attendance',    icon: CalendarDays,    href: '/dashboard/attendance',        roles: ['OWNER','ADMIN','HR_MANAGER'] },
   { label: 'Leaves',        icon: Briefcase,       href: '/dashboard/leaves',            roles: ['OWNER','ADMIN','HR_MANAGER'] },
   { label: 'Payroll',       icon: Wallet,          href: '/dashboard/payroll',           roles: ['OWNER','ADMIN','HR_MANAGER','FINANCE_MANAGER'] },
+  { label: 'Leave Types',   icon: CalendarDays,    href: '/dashboard/leave-types',       roles: ['OWNER','ADMIN','HR_MANAGER'] },
   { label: 'Recruitment',   icon: Users,           href: '/dashboard/recruitment',       roles: ['OWNER','ADMIN','HR_MANAGER'] },
-  { label: 'Departments',   icon: Building2,       href: '/dashboard/departments',       roles: ['OWNER','ADMIN','HR_MANAGER'] },
   { label: 'Finance',       icon: TrendingUp,      href: '/dashboard/invoices',          roles: ['OWNER','ADMIN','FINANCE_MANAGER','ACCOUNTANT'] },
   { label: 'Bank Accounts', icon: Wallet,          href: '/dashboard/bank-accounts',     roles: ['OWNER','ADMIN','FINANCE_MANAGER'] },
   { label: 'Procurement',   icon: ShoppingCart,    href: '/dashboard/purchase-orders',   roles: ['OWNER','ADMIN','PROCUREMENT_OFFICER','FINANCE_MANAGER'] },
@@ -47,13 +47,31 @@ const NAV: NavItem[] = [
   { label: 'Material Req',  icon: ShoppingCart,    href: '/dashboard/material-requests', roles: ['OWNER','ADMIN','PROCUREMENT_OFFICER','SITE_ENGINEER','PROJECT_MANAGER'] },
   { label: 'Inventory',     icon: Package,         href: '/dashboard/inventory',         roles: ['OWNER','ADMIN','PROCUREMENT_OFFICER'] },
   { label: 'CRM',           icon: TrendingUp,      href: '/dashboard/crm',               roles: ['OWNER','ADMIN','SALES_MANAGER'] },
+  { label: 'Proposals',     icon: FileText,        href: '/dashboard/crm/proposals',     roles: ['OWNER','ADMIN','SALES_MANAGER'] },
+  { label: 'Contracts',     icon: FileText,        href: '/dashboard/crm/contracts',     roles: ['OWNER','ADMIN','SALES_MANAGER'] },
   { label: 'HSE',           icon: Shield,          href: '/dashboard/hse',               roles: ['OWNER','ADMIN','PROJECT_MANAGER','SITE_ENGINEER'] },
+  { label: 'PTW',           icon: Shield,          href: '/dashboard/hse/ptw',           roles: ['OWNER','ADMIN','PROJECT_MANAGER','SITE_ENGINEER'] },
+  { label: 'Checklists',    icon: ClipboardList,   href: '/dashboard/hse/checklists',    roles: ['OWNER','ADMIN','PROJECT_MANAGER','SITE_ENGINEER'] },
   { label: 'Documents',     icon: FileText,        href: '/dashboard/documents',         roles: ['OWNER','ADMIN','PROJECT_MANAGER','FINANCE_MANAGER'] },
+  { label: 'COA',           icon: TrendingUp,      href: '/dashboard/finance/coa',       roles: ['OWNER','ADMIN','FINANCE_MANAGER','ACCOUNTANT'] },
+  { label: 'Journal',       icon: ClipboardList,   href: '/dashboard/finance/journal',   roles: ['OWNER','ADMIN','FINANCE_MANAGER','ACCOUNTANT'] },
+  { label: 'Roles',         icon: Shield,          href: '/dashboard/roles',             roles: ['OWNER','ADMIN'] },
+  { label: 'Fin Reports',   icon: BarChart3,       href: '/dashboard/finance/reports',   roles: ['OWNER','ADMIN','FINANCE_MANAGER'] },
+  { label: 'Expenses',      icon: TrendingUp,      href: '/dashboard/finance/expenses',  roles: ['OWNER','ADMIN','FINANCE_MANAGER','ACCOUNTANT'] },
+  { label: 'Tax Rates',     icon: TrendingUp,      href: '/dashboard/finance/tax-rates', roles: ['OWNER','ADMIN','FINANCE_MANAGER'] },
+  { label: 'Reconciliation',icon: TrendingUp,      href: '/dashboard/finance/reconciliation', roles: ['OWNER','ADMIN','FINANCE_MANAGER','ACCOUNTANT'] },
+  { label: 'HR Analytics',  icon: BarChart3,       href: '/dashboard/hr/analytics',      roles: ['OWNER','ADMIN','HR_MANAGER'] },
+  { label: '3-Way Match',   icon: ShoppingCart,    href: '/dashboard/procurement/three-way-match', roles: ['OWNER','ADMIN','PROCUREMENT_OFFICER','FINANCE_MANAGER'] },
+  { label: 'Spend Analytics',icon: BarChart3,      href: '/dashboard/procurement/spend-analytics', roles: ['OWNER','ADMIN','PROCUREMENT_OFFICER'] },
+  { label: 'RFQ',           icon: ShoppingCart,    href: '/dashboard/procurement/rfq',   roles: ['OWNER','ADMIN','PROCUREMENT_OFFICER'] },
+  { label: 'GRN',           icon: Package,         href: '/dashboard/procurement/grn',   roles: ['OWNER','ADMIN','PROCUREMENT_OFFICER'] },
   { label: 'Reports',       icon: BarChart3,       href: '/dashboard/reports',           roles: ['OWNER','ADMIN','FINANCE_MANAGER','PROJECT_MANAGER'] },
+  { label: 'Company',       icon: Building2,       href: '/dashboard/company',           roles: ['OWNER','ADMIN'] },
   { label: 'Users',         icon: Users,           href: '/dashboard/users',         roles: ['OWNER','ADMIN','SUPERADMIN'] },
-  { label: 'Branches',      icon: Building2,       href: '/dashboard/branches',      roles: ['OWNER','ADMIN'] },
-  { label: 'Settings',      icon: Settings,        href: '/dashboard/settings',      roles: ['OWNER','ADMIN','SUPERADMIN'] },
-  { label: 'Notifications', icon: Bell,            href: '/dashboard/notifications', roles: ['SUPERADMIN','OWNER','ADMIN','PROJECT_MANAGER','FINANCE_MANAGER','HR_MANAGER','PROCUREMENT_OFFICER','SITE_ENGINEER'] },
+  { label: 'Branches',      icon: Building2,       href: '/dashboard/branches',          roles: ['OWNER','ADMIN'] },
+  { label: 'Settings',      icon: Settings,        href: '/dashboard/settings',          roles: ['OWNER','ADMIN','SUPERADMIN'] },
+  { label: 'Notifications', icon: Bell,            href: '/dashboard/notifications',     roles: ['SUPERADMIN','OWNER','ADMIN','PROJECT_MANAGER','FINANCE_MANAGER','HR_MANAGER','PROCUREMENT_OFFICER','SITE_ENGINEER'] },
+  { label: 'Notif. Settings', icon: Bell,          href: '/dashboard/notification-settings', roles: ['SUPERADMIN','OWNER','ADMIN','PROJECT_MANAGER','FINANCE_MANAGER','HR_MANAGER','PROCUREMENT_OFFICER','SITE_ENGINEER'] },
 ];
 
 // ─── Sidebar content ──────────────────────────────────────────────────────────
@@ -70,6 +88,15 @@ function SidebarContent({ collapsed, onClose, isMobile = false }: {
   const visibleItems = NAV.filter((item) =>
     user.isSuperAdmin ? true : item.roles.includes(user.role)
   );
+
+  // Find the best (longest) matching href so only one item is active
+  const bestMatch = visibleItems
+    .filter((item) =>
+      item.href === '/dashboard'
+        ? pathname === '/dashboard'
+        : pathname === item.href || pathname.startsWith(item.href + '/')
+    )
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href ?? null;
 
   const initials = ((user.firstName?.[0] ?? '') + (user.lastName?.[0] ?? '')).toUpperCase() || user.email[0].toUpperCase();
 
@@ -99,7 +126,7 @@ function SidebarContent({ collapsed, onClose, isMobile = false }: {
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto p-2 flex flex-col gap-0.5">
         {visibleItems.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + '/');
+          const active = item.href === bestMatch;
           const Icon = item.icon;
           return (
             <Link

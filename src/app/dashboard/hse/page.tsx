@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { extendedApiClient } from '@/lib/api';
-import { useProjects } from '@/hooks/use-projects';
+import { apiV5, extendedApiClient } from '@/lib/api';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Select } from '@/components/ui/select';
 import { Shield, Plus, X } from 'lucide-react';
+import { INCIDENT_TYPE_OPTIONS, SEVERITY_OPTIONS, STATUS_OPTIONS, useProjectOptions } from '@/hooks/use-select-options';
 
 const BLANK = { projectId: '', incidentDate: new Date().toISOString().split('T')[0], type: 'near_miss', severity: 'medium', description: '', injuredPerson: '' };
 
@@ -17,17 +18,12 @@ export default function HsePage() {
   const [form, setForm] = useState(BLANK);
 
   const qc = useQueryClient();
-  const { data: projectsData } = useProjects();
+  const { options: projectOptions, isLoading: pLoading } = useProjectOptions();
   const { data, isLoading } = useQuery({ queryKey: ['incidents', statusFilter], queryFn: () => extendedApiClient.getIncidents({ status: statusFilter || undefined }) });
-  const { data: statsData } = useQuery({ queryKey: ['incident-stats'], queryFn: extendedApiClient.getIncidentStats });
-
   const create = useMutation({ mutationFn: extendedApiClient.createIncident, onSuccess: () => { qc.invalidateQueries({ queryKey: ['incidents'] }); setShowForm(false); setForm(BLANK); } });
   const close = useMutation({ mutationFn: extendedApiClient.closeIncident, onSuccess: () => qc.invalidateQueries({ queryKey: ['incidents'] }) });
 
-  const incidents = data?.data?.data ?? [];
-  const projects = projectsData?.data?.data ?? [];
-  const stats = statsData?.data ?? [];
-
+  const incidents = (data?.data as any) ?? [];
   const totalOpen = incidents.filter((i: any) => i.status === 'open').length;
   const totalCritical = incidents.filter((i: any) => i.severity === 'critical').length;
 
@@ -53,17 +49,13 @@ export default function HsePage() {
       {showForm && (
         <div className="card p-5">
           <form onSubmit={e => { e.preventDefault(); create.mutate(form); }} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <select className="input-base" required value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))}>
-              <option value="">Select project *</option>
-              {projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-            <input className="input-base" type="date" required value={form.incidentDate} onChange={e => setForm(p => ({ ...p, incidentDate: e.target.value }))} />
-            <select className="input-base" value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
-              {['accident','near_miss','property_damage'].map(t => <option key={t} value={t}>{t.replace('_',' ')}</option>)}
-            </select>
-            <select className="input-base" value={form.severity} onChange={e => setForm(p => ({ ...p, severity: e.target.value }))}>
-              {['low','medium','high','critical'].map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <Select options={projectOptions} value={form.projectId} onChange={v => setForm(p => ({ ...p, projectId: v }))} placeholder="Select project *" loading={pLoading} label="Project" />
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Incident Date</label>
+              <input className="input-base" type="date" required value={form.incidentDate} onChange={e => setForm(p => ({ ...p, incidentDate: e.target.value }))} />
+            </div>
+            <Select options={INCIDENT_TYPE_OPTIONS} value={form.type} onChange={v => setForm(p => ({ ...p, type: v }))} placeholder="Incident type" label="Type" searchable={false} />
+            <Select options={SEVERITY_OPTIONS} value={form.severity} onChange={v => setForm(p => ({ ...p, severity: v }))} placeholder="Severity" label="Severity" searchable={false} />
             <textarea className="input-base sm:col-span-2" rows={3} placeholder="Description *" required value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
             <input className="input-base" placeholder="Injured person (if any)" value={form.injuredPerson} onChange={e => setForm(p => ({ ...p, injuredPerson: e.target.value }))} />
             <div className="sm:col-span-2 flex gap-2">
@@ -74,10 +66,9 @@ export default function HsePage() {
         </div>
       )}
 
-      <select className="input-base w-44" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-        <option value="">All Status</option>
-        {['open','investigating','closed'].map(s => <option key={s} value={s}>{s}</option>)}
-      </select>
+      <div className="w-48">
+        <Select options={[{ value: '', label: 'All Status' }, { value: 'open', label: 'Open' }, { value: 'investigating', label: 'Investigating' }, { value: 'closed', label: 'Closed' }]} value={statusFilter} onChange={setStatusFilter} placeholder="All Status" searchable={false} />
+      </div>
 
       <DataTable data={incidents as any} isLoading={isLoading} emptyIcon={<Shield size={40} />} emptyText="No incidents reported."
         columns={[
@@ -88,9 +79,7 @@ export default function HsePage() {
           { key: 'description', label: 'Description', render: (r: any) => <span className="text-xs line-clamp-1" style={{ color: 'var(--text-muted)' }}>{r.description}</span> },
           { key: 'injuredPerson', label: 'Injured', render: (r: any) => <span className="text-xs" style={{ color: r.injuredPerson ? '#dc2626' : 'var(--text-muted)' }}>{r.injuredPerson || 'None'}</span> },
           { key: 'actions', label: '', render: (r: any) => r.status !== 'closed' ? (
-            <button onClick={() => close.mutate(r.id)} className="text-xs px-2 py-1 rounded border transition-colors flex items-center gap-1" style={{ borderColor: '#16a34a', color: '#16a34a' }}>
-              <X size={12} /> Close
-            </button>
+            <button onClick={() => close.mutate(r.id)} className="text-xs px-2 py-1 rounded border flex items-center gap-1" style={{ borderColor: '#16a34a', color: '#16a34a' }}><X size={12} />Close</button>
           ) : null },
         ]}
       />

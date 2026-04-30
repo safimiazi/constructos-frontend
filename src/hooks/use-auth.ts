@@ -5,6 +5,7 @@ import { apiClient, ApiError, User, setAccessToken, getAccessToken, clearTokens 
 
 const USER_QUERY_KEY = ['auth', 'user'];
 const USER_STORAGE_KEY = 'cos_user';
+const REFRESH_TOKEN_KEY = 'cos_refresh_token';
 
 function saveUser(user: User | null) {
   if (typeof window === 'undefined') return;
@@ -17,7 +18,6 @@ function loadUser(): User | null {
   try {
     const raw = localStorage.getItem(USER_STORAGE_KEY);
     if (!raw) return null;
-    // Only return if we also have a token
     if (!getAccessToken()) return null;
     return JSON.parse(raw) as User;
   } catch { return null; }
@@ -29,7 +29,7 @@ export function useAuth() {
   const { data: user, isLoading } = useQuery<User | null>({
     queryKey: USER_QUERY_KEY,
     queryFn: async () => loadUser(),
-    initialData: loadUser,
+    initialData: () => undefined,  // no SSR initial data — prevents hydration mismatch
     staleTime: Infinity,
     retry: false,
   });
@@ -39,6 +39,10 @@ export function useAuth() {
       apiClient.login({ email, password }),
     onSuccess: (res) => {
       setAccessToken(res.data.accessToken);
+      // Store refresh token for silent refresh
+      if (res.data.refreshToken && typeof window !== 'undefined') {
+        localStorage.setItem(REFRESH_TOKEN_KEY, res.data.refreshToken);
+      }
       saveUser(res.data.user);
       queryClient.setQueryData<User>(USER_QUERY_KEY, res.data.user);
     },
@@ -51,6 +55,7 @@ export function useAuth() {
     onSettled: () => {
       clearTokens();
       saveUser(null);
+      if (typeof window !== 'undefined') localStorage.removeItem(REFRESH_TOKEN_KEY);
       queryClient.setQueryData(USER_QUERY_KEY, null);
       queryClient.clear();
     },

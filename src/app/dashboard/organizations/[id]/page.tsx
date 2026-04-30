@@ -43,7 +43,7 @@ export default function TenantDetailPage() {
               <button onClick={() => updateStatus.mutate({ id: tenant.id, status: 'active' })} className="btn-primary text-sm py-1.5 px-3">Activate</button>
             )}
             {tenant.status === 'active' && (
-              <button onClick={() => updateStatus.mutate({ id: tenant.id, status: 'suspended' })} className="btn-danger text-sm py-1.5 px-3">Suspend</button>
+              <button onClick={() => updateStatus.mutate({ id: tenant.id, status: 'suspended' })} className="btn-secondary text-sm py-1.5 px-3" style={{ color: '#dc2626', borderColor: '#dc2626' }}>Suspend</button>
             )}
           </div>
         </div>

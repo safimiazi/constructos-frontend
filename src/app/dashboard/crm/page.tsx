@@ -6,11 +6,24 @@ import { extendedApiClient } from '@/lib/api';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Select } from '@/components/ui/select';
 import { Users, TrendingUp, Plus, Trash2 } from 'lucide-react';
 
 type Tab = 'clients' | 'leads';
 
-const LEAD_STAGES = ['new','qualified','proposal','negotiation','won','lost'];
+const LEAD_STAGE_OPTIONS = [
+  { value: 'new', label: 'New' },
+  { value: 'qualified', label: 'Qualified' },
+  { value: 'proposal', label: 'Proposal' },
+  { value: 'negotiation', label: 'Negotiation' },
+  { value: 'won', label: 'Won' },
+  { value: 'lost', label: 'Lost' },
+];
+
+const CLIENT_TYPE_OPTIONS = [
+  { value: 'company', label: 'Company' },
+  { value: 'individual', label: 'Individual' },
+];
 
 export default function CrmPage() {
   const [tab, setTab] = useState<Tab>('clients');
@@ -42,14 +55,14 @@ export default function CrmPage() {
       {/* Pipeline summary */}
       {pipeline.length > 0 && (
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-          {LEAD_STAGES.map(stage => {
-            const s = pipeline.find((p: any) => p.stage === stage);
+          {LEAD_STAGE_OPTIONS.map(stage => {
+            const s = pipeline.find((p: any) => p.stage === stage.value);
             return (
-              <div key={stage} className="card p-3 text-center cursor-pointer" onClick={() => { setTab('leads'); setStageFilter(stage); }}
-                style={{ borderColor: stageFilter === stage ? 'var(--brand-500)' : 'var(--border)' }}>
-                <p className="text-xs capitalize" style={{ color: 'var(--text-muted)' }}>{stage}</p>
+              <div key={stage.value} className="card p-3 text-center cursor-pointer transition-all hover:shadow-md"
+                onClick={() => { setTab('leads'); setStageFilter(stage.value); }}
+                style={{ borderColor: stageFilter === stage.value ? 'var(--brand-500)' : 'var(--border)', borderWidth: stageFilter === stage.value ? 2 : 1 }}>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{stage.label}</p>
                 <p className="text-lg font-bold mt-0.5" style={{ color: 'var(--text-primary)' }}>{s?.count ?? 0}</p>
-                {s?.totalValue && <p className="text-xs" style={{ color: 'var(--brand-500)' }}>৳{Number(s.totalValue).toLocaleString()}</p>}
               </div>
             );
           })}
@@ -67,14 +80,12 @@ export default function CrmPage() {
         ))}
       </div>
 
-      {/* Forms */}
+      {/* Client form */}
       {showForm && tab === 'clients' && (
         <div className="card p-5">
           <form onSubmit={e => { e.preventDefault(); createClient.mutate(clientForm); }} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input className="input-base" placeholder="Client name *" required value={clientForm.name} onChange={e => setClientForm(p => ({ ...p, name: e.target.value }))} />
-            <select className="input-base" value={clientForm.type} onChange={e => setClientForm(p => ({ ...p, type: e.target.value }))}>
-              <option value="company">Company</option><option value="individual">Individual</option>
-            </select>
+            <Select options={CLIENT_TYPE_OPTIONS} value={clientForm.type} onChange={v => setClientForm(p => ({ ...p, type: v }))} placeholder="Type" searchable={false} />
             <input className="input-base" placeholder="Contact person" value={clientForm.contactPerson} onChange={e => setClientForm(p => ({ ...p, contactPerson: e.target.value }))} />
             <input className="input-base" type="email" placeholder="Email" value={clientForm.email} onChange={e => setClientForm(p => ({ ...p, email: e.target.value }))} />
             <input className="input-base" placeholder="Phone" value={clientForm.phone} onChange={e => setClientForm(p => ({ ...p, phone: e.target.value }))} />
@@ -87,13 +98,14 @@ export default function CrmPage() {
         </div>
       )}
 
+      {/* Lead form */}
       {showForm && tab === 'leads' && (
         <div className="card p-5">
           <form onSubmit={e => { e.preventDefault(); createLead.mutate({ ...leadForm, expectedValue: Number(leadForm.expectedValue) }); }} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input className="input-base" placeholder="Lead name *" required value={leadForm.name} onChange={e => setLeadForm(p => ({ ...p, name: e.target.value }))} />
-            <input className="input-base" placeholder="Source (referral, website…)" value={leadForm.source} onChange={e => setLeadForm(p => ({ ...p, source: e.target.value }))} />
+            <input className="input-base" placeholder="Source" value={leadForm.source} onChange={e => setLeadForm(p => ({ ...p, source: e.target.value }))} />
             <input className="input-base" type="number" placeholder="Expected value (BDT)" value={leadForm.expectedValue} onChange={e => setLeadForm(p => ({ ...p, expectedValue: e.target.value }))} />
-            <input className="input-base" type="date" placeholder="Expected close date" value={leadForm.expectedCloseDate} onChange={e => setLeadForm(p => ({ ...p, expectedCloseDate: e.target.value }))} />
+            <input className="input-base" type="date" value={leadForm.expectedCloseDate} onChange={e => setLeadForm(p => ({ ...p, expectedCloseDate: e.target.value }))} />
             <div className="sm:col-span-2 flex gap-2">
               <button type="submit" disabled={createLead.isPending} className="btn-primary">{createLead.isPending ? 'Saving…' : 'Save'}</button>
               <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
@@ -119,13 +131,14 @@ export default function CrmPage() {
       {/* Leads table */}
       {tab === 'leads' && (
         <>
-          <div className="flex gap-2 flex-wrap">
-            <button onClick={() => setStageFilter('')} className="text-xs px-3 py-1.5 rounded-full border transition-colors"
-              style={{ background: !stageFilter ? 'var(--brand-500)' : 'transparent', color: !stageFilter ? '#fff' : 'var(--text-secondary)', borderColor: !stageFilter ? 'var(--brand-500)' : 'var(--border)' }}>All</button>
-            {LEAD_STAGES.map(s => (
-              <button key={s} onClick={() => setStageFilter(s)} className="text-xs px-3 py-1.5 rounded-full border capitalize transition-colors"
-                style={{ background: stageFilter === s ? 'var(--brand-500)' : 'transparent', color: stageFilter === s ? '#fff' : 'var(--text-secondary)', borderColor: stageFilter === s ? 'var(--brand-500)' : 'var(--border)' }}>{s}</button>
-            ))}
+          <div className="w-52">
+            <Select
+              options={[{ value: '', label: 'All Stages' }, ...LEAD_STAGE_OPTIONS]}
+              value={stageFilter}
+              onChange={setStageFilter}
+              placeholder="All Stages"
+              searchable={false}
+            />
           </div>
           <DataTable data={leads as any} isLoading={lLoading} emptyIcon={<TrendingUp size={40} />} emptyText="No leads found."
             columns={[
@@ -133,14 +146,18 @@ export default function CrmPage() {
               { key: 'stage', label: 'Stage', render: (r: any) => <StatusBadge status={r.stage} /> },
               { key: 'expectedValue', label: 'Value', render: (r: any) => <span style={{ color: 'var(--text-secondary)' }}>৳{Number(r.expectedValue).toLocaleString()}</span> },
               { key: 'source', label: 'Source', render: (r: any) => <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{r.source ?? '—'}</span> },
-              { key: 'expectedCloseDate', label: 'Close Date', render: (r: any) => <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{r.expectedCloseDate ? new Date(r.expectedCloseDate).toLocaleDateString() : '—'}</span> },
               { key: 'actions', label: '', render: (r: any) => (
-                <div className="flex gap-1">
-                  <select className="text-xs border rounded px-1 py-0.5" style={{ borderColor: 'var(--border)', background: 'var(--bg-card)', color: 'var(--text-secondary)' }}
-                    value={r.stage} onChange={e => moveStage.mutate({ id: r.id, stage: e.target.value })}>
-                    {LEAD_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <button onClick={() => deleteLead.mutate(r.id)} className="p-1.5 rounded hover:bg-red-50" style={{ color: '#dc2626' }}><Trash2 size={14} /></button>
+                <div className="flex gap-1 items-center">
+                  <div className="w-36">
+                    <Select
+                      options={LEAD_STAGE_OPTIONS}
+                      value={r.stage}
+                      onChange={stage => moveStage.mutate({ id: r.id, stage })}
+                      placeholder="Move stage"
+                      searchable={false}
+                    />
+                  </div>
+                  <button onClick={() => deleteLead.mutate(r.id)} className="p-1.5 rounded hover:bg-red-50 ml-1" style={{ color: '#dc2626' }}><Trash2 size={14} /></button>
                 </div>
               )},
             ]}

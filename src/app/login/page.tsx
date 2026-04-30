@@ -28,6 +28,7 @@ function LoginForm() {
       // Clear old session data before login
       localStorage.removeItem('cos_user');
       localStorage.removeItem('cos_access_token');
+      localStorage.removeItem('cos_refresh_token');
       await login(email, password);
       router.push('/dashboard');
     } catch { /* surfaced via loginError */ }

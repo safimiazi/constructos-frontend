@@ -6,6 +6,22 @@ export function useSuperAdminStats() {
   return useQuery({ queryKey: ['superadmin-stats'], queryFn: apiClient.getSuperAdminStats });
 }
 
+export function useSuperAdminGrowth() {
+  return useQuery({ queryKey: ['superadmin-growth'], queryFn: apiClient.getSuperAdminGrowth });
+}
+
+export function useSuperAdminTenantStatus() {
+  return useQuery({ queryKey: ['superadmin-tenant-status'], queryFn: apiClient.getSuperAdminTenantStatus });
+}
+
+export function useSuperAdminPlanDist() {
+  return useQuery({ queryKey: ['superadmin-plan-dist'], queryFn: apiClient.getSuperAdminPlanDist });
+}
+
+export function useSuperAdminTopTenants() {
+  return useQuery({ queryKey: ['superadmin-top-tenants'], queryFn: apiClient.getSuperAdminTopTenants });
+}
+
 export function useTenants(params?: { status?: string; search?: string; page?: number }) {
   return useQuery({ queryKey: ['tenants', params], queryFn: () => apiClient.getTenants(params) });
 }

@@ -1,4 +1,6 @@
-import { ComingSoon } from '@/components/ui/coming-soon';
+import { redirect } from 'next/navigation';
+
+// Redirect to the proper announcements management page
 export default function Page() {
-  return <ComingSoon title="Announcements" description="Send platform-wide announcements to all tenants. Coming soon." />;
+  redirect('/dashboard/announcements-manage');
 }

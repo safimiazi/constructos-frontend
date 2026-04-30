@@ -2,14 +2,15 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useEmployee } from '@/hooks/use-employees';
-import { useAttendance, useLeaves } from '@/hooks/use-employees';
+import { useEmployee, useAttendance, useLeaves } from '@/hooks/use-employees';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { DataTable } from '@/components/ui/data-table';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileText } from 'lucide-react';
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api';
 
-type Tab = 'attendance' | 'leaves';
+type Tab = 'attendance' | 'leaves' | 'payslips';
 
 export default function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -18,10 +19,16 @@ export default function EmployeeDetailPage() {
   const { data: empData, isLoading } = useEmployee(id);
   const { data: attData } = useAttendance({ employeeId: id });
   const { data: leaveData } = useLeaves({ employeeId: id });
+  const { data: payslipsData } = useQuery({
+    queryKey: ['payslips', id],
+    queryFn: () => apiClient.getEmployeePayslips(id),
+    enabled: !!id,
+  });
 
   const emp = empData?.data;
   const attendance = (attData?.data as any) ?? [];
   const leaves = (leaveData?.data as any) ?? [];
+  const payslips = (payslipsData?.data as any[]) ?? [];
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-64">
@@ -75,7 +82,7 @@ export default function EmployeeDetailPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 p-1 rounded-lg w-fit" style={{ background: 'var(--bg-muted)' }}>
-        {(['attendance', 'leaves'] as Tab[]).map(t => (
+        {(['attendance', 'leaves', 'payslips'] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className="px-4 py-1.5 rounded-md text-sm font-medium transition-all capitalize"
             style={{ background: tab === t ? 'var(--bg-card)' : 'transparent', color: tab === t ? 'var(--text-primary)' : 'var(--text-muted)', boxShadow: tab === t ? 'var(--shadow-sm)' : 'none' }}>
@@ -105,6 +112,20 @@ export default function EmployeeDetailPage() {
             { key: 'totalDays', label: 'Days', render: (r: any) => <span>{r.totalDays}</span> },
             { key: 'status', label: 'Status', render: (r: any) => <StatusBadge status={r.status} /> },
             { key: 'reason', label: 'Reason', render: (r: any) => <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{r.reason}</span> },
+          ]}
+        />
+      )}
+
+      {tab === 'payslips' && (
+        <DataTable data={payslips} emptyIcon={<FileText size={36} />} emptyText="No payslips generated yet."
+          columns={[
+            { key: 'payPeriod', label: 'Pay Period', render: (r: any) => <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{r.payPeriod}</span> },
+            { key: 'basicSalary', label: 'Basic', render: (r: any) => <span>৳{Number(r.basicSalary).toLocaleString()}</span> },
+            { key: 'overtimePay', label: 'OT Pay', render: (r: any) => <span>৳{Number(r.overtimePay ?? 0).toLocaleString()}</span> },
+            { key: 'totalBonuses', label: 'Bonuses', render: (r: any) => <span style={{ color: '#16a34a' }}>+৳{Number(r.totalBonuses ?? 0).toLocaleString()}</span> },
+            { key: 'totalDeductions', label: 'Deductions', render: (r: any) => <span style={{ color: '#dc2626' }}>-৳{Number(r.totalDeductions ?? 0).toLocaleString()}</span> },
+            { key: 'netPay', label: 'Net Pay', render: (r: any) => <span className="font-bold" style={{ color: 'var(--brand-500)' }}>৳{Number(r.netPay).toLocaleString()}</span> },
+            { key: 'status', label: 'Status', render: (r: any) => <StatusBadge status={r.status ?? 'draft'} /> },
           ]}
         />
       )}

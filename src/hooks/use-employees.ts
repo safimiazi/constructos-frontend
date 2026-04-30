@@ -4,7 +4,7 @@ import { apiClient } from '@/lib/api';
 
 const K = { all: ['employees'] as const };
 
-export function useEmployees(params?: { search?: string; page?: number }) {
+export function useEmployees(params?: { search?: string; status?: string; page?: number }) {
   return useQuery({ queryKey: [...K.all, params], queryFn: () => apiClient.getEmployees(params) });
 }
 
@@ -33,7 +33,6 @@ export function useDeleteEmployee() {
 export function useAttendance(params?: { employeeId?: string; startDate?: string; endDate?: string }) {
   return useQuery({ queryKey: ['attendance', params], queryFn: () => apiClient.getAttendance(params) });
 }
-
 export function useLeaves(params?: { employeeId?: string; status?: string }) {
   return useQuery({ queryKey: ['leaves', params], queryFn: () => apiClient.getLeaves(params) });
 }

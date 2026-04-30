@@ -40,3 +40,8 @@ export function useUpdatePurchaseOrder(id: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['purchase-orders'] }),
   });
 }
+
+export function useDeletePurchaseOrder() {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: apiClient.deletePurchaseOrder, onSuccess: () => qc.invalidateQueries({ queryKey: ['purchase-orders'] }) });
+}
