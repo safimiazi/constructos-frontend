@@ -56,7 +56,10 @@ export function usePayrollRuns() {
 
 export function useCreatePayrollRun() {
   const qc = useQueryClient();
-  return useMutation({ mutationFn: apiClient.createPayrollRun, onSuccess: () => qc.invalidateQueries({ queryKey: ['payroll-runs'] }) });
+  return useMutation({
+    mutationFn: apiClient.createPayrollRun,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['payroll-runs'] }),
+  });
 }
 
 export function usePayrollItems(runId: string) {

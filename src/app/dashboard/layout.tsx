@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Sidebar } from '@/components/layout/sidebar';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 import { AnnouncementBanner } from '@/components/layout/announcement-banner';
+import { ToastContainer } from '@/components/ui/toast';
 
 const Spinner = () => (
   <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-subtle)' }}>
@@ -65,6 +66,7 @@ console.log("user", user)
           <div className="p-4 md:p-6">{children}</div>
         </main>
       </div>
+      <ToastContainer />
     </div>
   );
 }

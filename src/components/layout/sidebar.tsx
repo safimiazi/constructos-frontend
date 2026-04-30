@@ -35,6 +35,7 @@ const NAV: NavItem[] = [
   { label: 'Projects',      icon: FolderKanban,    href: '/dashboard/projects',          roles: ['OWNER','ADMIN','PROJECT_MANAGER','SITE_ENGINEER','FINANCE_MANAGER'] },
   { label: 'Tasks',         icon: ClipboardList,   href: '/dashboard/tasks',             roles: ['OWNER','ADMIN','PROJECT_MANAGER','SITE_ENGINEER'] },
   { label: 'HR',            icon: HardHat,         href: '/dashboard/employees',         roles: ['OWNER','ADMIN','HR_MANAGER','PROJECT_MANAGER'] },
+  { label: 'Departments',   icon: Building2,       href: '/dashboard/departments',        roles: ['OWNER','ADMIN','HR_MANAGER'] },
   { label: 'Attendance',    icon: CalendarDays,    href: '/dashboard/attendance',        roles: ['OWNER','ADMIN','HR_MANAGER'] },
   { label: 'Leaves',        icon: Briefcase,       href: '/dashboard/leaves',            roles: ['OWNER','ADMIN','HR_MANAGER'] },
   { label: 'Payroll',       icon: Wallet,          href: '/dashboard/payroll',           roles: ['OWNER','ADMIN','HR_MANAGER','FINANCE_MANAGER'] },

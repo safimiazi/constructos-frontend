@@ -9,6 +9,7 @@ import { Wallet, ChevronDown, ChevronUp, Edit2, Check, X } from 'lucide-react';
 import { apiClient, apiV4 } from '@/lib/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEmployeeOptions } from '@/hooks/use-select-options';
+import { toast } from '@/hooks/use-toast';
 
 const currentYear = new Date().getFullYear();
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => {
@@ -69,7 +70,14 @@ function PayrollRunRow({ run }: { run: any }) {
   });
   const genPayslips = useMutation({
     mutationFn: () => apiClient.generatePayslips(run.id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['payroll-runs'] }),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['payroll-runs'] });
+      const count = Array.isArray((res as any)?.data) ? (res as any).data.length : '?';
+      toast.success(`${count} payslip(s) generated successfully.`);
+    },
+    onError: (err: any) => {
+      toast.error(`Failed: ${err?.message ?? 'Unknown error'}`);
+    },
   });
 
   return (
@@ -88,8 +96,12 @@ function PayrollRunRow({ run }: { run: any }) {
               </button>
             )}
             {run.status === 'approved' && (
-              <button onClick={() => genPayslips.mutate()} disabled={genPayslips.isPending} className="btn-secondary text-xs py-1 px-2">
-                {genPayslips.isPending ? '…' : 'Gen Payslips'}
+              <button
+                onClick={() => genPayslips.mutate()}
+                disabled={genPayslips.isPending}
+                className="btn-primary text-xs py-1 px-2"
+              >
+                {genPayslips.isPending ? 'Generating…' : 'Gen Payslips'}
               </button>
             )}
             <button onClick={() => setExpanded(v => !v)} className="p-1.5 rounded hover:bg-(--bg-muted)" style={{ color: 'var(--text-muted)' }}>
@@ -127,6 +139,12 @@ export default function PayrollPage() {
   const [payPeriod, setPayPeriod] = useState(new Date().toISOString().slice(0, 7));
   const { data, isLoading } = usePayrollRuns();
   const create = useCreatePayrollRun();
+
+  const handleRunPayroll = () => {
+    create.mutate(payPeriod, {
+      onError: (err: any) => toast.error(err?.message ?? 'Failed to create payroll run'),
+    });
+  };
   const runs = (data?.data as any) ?? [];
 
   return (
@@ -137,7 +155,7 @@ export default function PayrollPage() {
             <div className="w-52">
               <Select options={MONTH_OPTIONS} value={payPeriod} onChange={setPayPeriod} placeholder="Select month" />
             </div>
-            <button className="btn-primary" disabled={create.isPending} onClick={() => create.mutate(payPeriod)}>
+            <button className="btn-primary" disabled={create.isPending} onClick={handleRunPayroll}>
               {create.isPending ? 'Generating…' : '+ Run Payroll'}
             </button>
           </div>

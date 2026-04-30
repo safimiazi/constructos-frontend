@@ -1,13 +1,42 @@
 'use client';
 
 import { useState } from 'react';
-import { useProjects, useTasks, useCreateTask } from '@/hooks/use-projects';
+import { useProjects, useTasks, useCreateTask, projectKeys } from '@/hooks/use-projects';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Select } from '@/components/ui/select';
 import { ClipboardList, Plus } from 'lucide-react';
 import { PRIORITY_OPTIONS, STATUS_OPTIONS, useProjectOptions, useUserOptions } from '@/hooks/use-select-options';
+import { useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api';
+
+function ProgressSlider({ taskId, projectId, value, status }: { taskId: string; projectId: string; value: number; status: string }) {
+  const [local, setLocal] = useState(Number(value));
+  const qc = useQueryClient();
+
+  const handleChange = async (val: number) => {
+    setLocal(val);
+    const newStatus = val === 100 ? 'done' : val > 0 ? 'in_progress' : status;
+    await apiClient.updateTask(projectId, taskId, { progressPct: val, status: newStatus } as any);
+    // Invalidate both tasks and projects so progress bar updates without reload
+    qc.invalidateQueries({ queryKey: projectKeys.tasks(projectId) });
+    qc.invalidateQueries({ queryKey: projectKeys.all });
+  };
+
+  return (
+    <div className="flex items-center gap-2 min-w-[140px]">
+      <input
+        type="range" min={0} max={100} step={5}
+        value={local}
+        className="w-20 cursor-pointer accent-purple-600"
+        onChange={e => setLocal(Number(e.target.value))}
+        onMouseUp={e => handleChange(Number((e.target as HTMLInputElement).value))}
+      />
+      <span className="text-xs w-8 text-right tabular-nums" style={{ color: 'var(--text-muted)' }}>{local}%</span>
+    </div>
+  );
+}
 
 export default function TasksPage() {
   const [projectId, setProjectId] = useState('');
@@ -78,12 +107,12 @@ export default function TasksPage() {
             { key: 'priority', label: 'Priority', render: (r: any) => <StatusBadge status={r.priority} /> },
             { key: 'status', label: 'Status', render: (r: any) => <StatusBadge status={r.status} /> },
             { key: 'progressPct', label: 'Progress', render: (r: any) => (
-              <div className="flex items-center gap-2">
-                <div className="w-16 h-1.5 rounded-full" style={{ background: 'var(--border)' }}>
-                  <div className="h-1.5 rounded-full" style={{ width: `${r.progressPct}%`, background: 'var(--brand-500)' }} />
-                </div>
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{r.progressPct}%</span>
-              </div>
+              <ProgressSlider
+                taskId={r.id}
+                projectId={projectId}
+                value={r.progressPct}
+                status={r.status}
+              />
             )},
             { key: 'dueDate', label: 'Due', render: (r: any) => <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{r.dueDate ? new Date(r.dueDate).toLocaleDateString() : '—'}</span> },
           ]}

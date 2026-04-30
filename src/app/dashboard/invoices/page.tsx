@@ -37,7 +37,15 @@ export default function InvoicesPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    await create.mutateAsync({ ...form, subtotal: Number(form.subtotal), taxAmount: Number(form.taxAmount), totalAmount: Number(form.totalAmount), items: [] } as any);
+    await create.mutateAsync({
+      ...form,
+      subtotal: Number(form.subtotal),
+      taxAmount: Number(form.taxAmount),
+      totalAmount: Number(form.totalAmount),
+      projectId: form.projectId || undefined,
+      clientId: form.clientId || undefined,
+      items: [],
+    } as any);
     setShowForm(false); setForm(BLANK);
   };
 
@@ -112,7 +120,7 @@ export default function InvoicesPage() {
             <div className="flex gap-1">
               <Link href={`/dashboard/invoices/${r.id}`} className="p-1.5 rounded hover:bg-(--bg-muted) transition-colors" style={{ color: 'var(--text-muted)' }}><Eye size={14} /></Link>
               {r.status === 'draft' && <button onClick={() => updateStatus.mutate({ id: r.id, status: 'sent' })} className="text-xs px-2 py-1 rounded border" style={{ borderColor: '#2563eb', color: '#2563eb' }}>Send</button>}
-              {r.status === 'sent' && <button onClick={() => updateStatus.mutate({ id: r.id, status: 'paid' })} className="text-xs px-2 py-1 rounded border" style={{ borderColor: '#16a34a', color: '#16a34a' }}>Mark Paid</button>}
+              {r.status === 'sent' && <Link href={`/dashboard/invoices/${r.id}`} className="text-xs px-2 py-1 rounded border" style={{ borderColor: '#16a34a', color: '#16a34a' }}>Record Payment</Link>}
               <button onClick={() => del.mutate(r.id)} className="p-1.5 rounded hover:bg-red-50" style={{ color: '#dc2626' }}><Trash2 size={14} /></button>
             </div>
           )},
