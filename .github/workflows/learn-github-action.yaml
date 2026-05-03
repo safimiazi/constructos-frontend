@@ -1,8 +1,196 @@
- name: learn-github-actions
- run-name: Run by ${{github.actor}} on branch ${{github.ref_name}}
- on: [push]
- jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            - run: echo "Hello World"
+# ============================================================
+# ADVANCED GITHUB ACTIONS - CI/CD WORKFLOW
+# ============================================================
+# CONCEPTS COVERED:
+#   - Triggers (on: push, pull_request, workflow_dispatch)
+#   - Jobs & job dependencies (needs:)
+#   - Caching (actions/cache)
+#   - Matrix strategy (test on multiple Node versions)
+#   - Environment secrets & variables
+#   - Conditional steps (if:)
+#   - Artifacts (upload/download)
+#   - Reusable steps with composite actions
+#   - Deployment job (only on main branch)
+# ============================================================
+
+name: CI/CD Pipeline
+run-name: "[${{ github.ref_name }}] triggered by ${{ github.actor }}"
+
+# ============================================================
+# TRIGGERS
+# ============================================================
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - "feature/**"   # matches feature/anything
+  pull_request:
+    branches:
+      - main
+      - dev
+  # Manual trigger from GitHub UI — useful for re-deploys
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+
+# ============================================================
+# GLOBAL ENV VARS (available to all jobs)
+# ============================================================
+env:
+  NODE_VERSION: "20"
+  NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+# ============================================================
+# JOBS
+# ============================================================
+jobs:
+
+  # ----------------------------------------------------------
+  # JOB 1: LINT & TYPE CHECK
+  # Runs first — fast feedback before expensive build
+  # ----------------------------------------------------------
+  lint-and-typecheck:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      # CONCEPT: Checkout your repo code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # CONCEPT: Setup Node with built-in npm cache support
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"           # caches ~/.npm automatically
+          cache-dependency-path: constructos-frontend/package-lock.json
+
+      # CONCEPT: Install deps (uses cache from setup-node above)
+      - name: Install dependencies
+        working-directory: constructos-frontend
+        run: npm ci              # ci = clean install, faster & deterministic
+
+      # CONCEPT: Run ESLint
+      - name: Run ESLint
+        working-directory: constructos-frontend
+        run: npm run lint
+
+      # CONCEPT: TypeScript type check (no emit, just check)
+      - name: TypeScript type check
+        working-directory: constructos-frontend
+        run: npx tsc --noEmit
+
+  # ----------------------------------------------------------
+  # JOB 2: BUILD (matrix strategy)
+  # Tests build on multiple Node versions
+  # Waits for lint-and-typecheck to pass first
+  # ----------------------------------------------------------
+  build:
+    name: Build (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck   # CONCEPT: job dependency
+
+    # CONCEPT: Matrix — runs this job N times with different configs
+    strategy:
+      matrix:
+        node-version: ["18", "20"]
+      fail-fast: true            # cancel other matrix jobs if one fails
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: constructos-frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: constructos-frontend
+        run: npm ci
+
+      # CONCEPT: Inject secrets as env vars at build time
+      - name: Build Next.js app
+        working-directory: constructos-frontend
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+        run: npm run build
+
+      # CONCEPT: Upload build artifact (only from Node 20 build)
+      # Artifacts persist between jobs and can be downloaded
+      - name: Upload build artifact
+        if: matrix.node-version == '20'   # CONCEPT: conditional step
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-build
+          path: constructos-frontend/.next/
+          retention-days: 7
+
+  # ----------------------------------------------------------
+  # JOB 3: DEPLOY (only on main branch)
+  # Downloads the artifact from build job and deploys
+  # ----------------------------------------------------------
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build                 # waits for ALL matrix builds to pass
+
+    # CONCEPT: Conditional job — only runs on main branch push
+    # or manual trigger targeting production
+    if: |
+      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+
+    # CONCEPT: Environment — links to GitHub Environments for
+    # protection rules, required reviewers, and env-specific secrets
+    environment:
+      name: production
+      url: https://your-app.vercel.app   # shows as link in GitHub UI
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # CONCEPT: Download artifact produced by build job
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-build
+          path: constructos-frontend/.next/
+
+      # CONCEPT: Use a secret token to deploy (e.g. Vercel)
+      # Add VERCEL_TOKEN in repo Settings > Secrets > Actions
+      - name: Deploy to Vercel
+        working-directory: constructos-frontend
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npm install -g vercel
+          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+          vercel build --prod --token=$VERCEL_TOKEN
+          vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+
+      # CONCEPT: Post-deploy notification (Slack, Discord, etc.)
+      - name: Notify deployment success
+        if: success()            # only runs if previous steps passed
+        run: |
+          echo "Deployed successfully by ${{ github.actor }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+
+      - name: Notify deployment failure
+        if: failure()            # only runs if a previous step failed
+        run: echo "Deployment FAILED — check logs above"
