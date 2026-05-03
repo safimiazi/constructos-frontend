@@ -103,7 +103,7 @@ jobs:
     # CONCEPT: Matrix — runs this job N times with different configs
     strategy:
       matrix:
-        node-version: ["18", "20"]
+        node-version: ["24", "20"]
       fail-fast: true            # cancel sibling matrix jobs if one fails
 
     steps:
