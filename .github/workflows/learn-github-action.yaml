@@ -1,0 +1,8 @@
+ name: learn-github-actions
+ run-name: Run by ${{github.actor}} on branch ${{github.ref_name}}
+ on: [push]
+ jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - run: echo "Hello World"
