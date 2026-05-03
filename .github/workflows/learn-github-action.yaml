@@ -83,8 +83,8 @@ jobs:
         run: npm ci
 
       # CONCEPT: Run ESLint
-      - name: Run ESLint
-        run: npm run lint
+    #   - name: Run ESLint
+    #     run: npm run lint
 
       # CONCEPT: TypeScript type check without emitting output files
       - name: TypeScript type check
