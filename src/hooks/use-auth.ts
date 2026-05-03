@@ -1,26 +1,35 @@
-'use client';
+"use client";
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiClient, ApiError, User, setAccessToken, getAccessToken, clearTokens } from '@/lib/api';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  apiClient,
+  ApiError,
+  User,
+  setAccessToken,
+  getAccessToken,
+  clearTokens,
+} from "@/lib/api";
 
-const USER_QUERY_KEY = ['auth', 'user'];
-const USER_STORAGE_KEY = 'cos_user';
-const REFRESH_TOKEN_KEY = 'cos_refresh_token';
+const USER_QUERY_KEY = ["auth", "user"];
+const USER_STORAGE_KEY = "cos_user";
+const REFRESH_TOKEN_KEY = "cos_refresh_token";
 
 function saveUser(user: User | null) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   if (user) localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
   else localStorage.removeItem(USER_STORAGE_KEY);
 }
 
 function loadUser(): User | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(USER_STORAGE_KEY);
     if (!raw) return null;
     if (!getAccessToken()) return null;
     return JSON.parse(raw) as User;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 export function useAuth() {
@@ -29,7 +38,7 @@ export function useAuth() {
   const { data: user, isLoading } = useQuery<User | null>({
     queryKey: USER_QUERY_KEY,
     queryFn: async () => loadUser(),
-    initialData: () => undefined,  // no SSR initial data — prevents hydration mismatch
+    initialData: () => undefined, // no SSR initial data — prevents hydration mismatch
     staleTime: Infinity,
     retry: false,
   });
@@ -40,7 +49,7 @@ export function useAuth() {
     onSuccess: (res) => {
       setAccessToken(res.data.accessToken);
       // Store refresh token for silent refresh
-      if (res.data.refreshToken && typeof window !== 'undefined') {
+      if (res.data.refreshToken && typeof window !== "undefined") {
         localStorage.setItem(REFRESH_TOKEN_KEY, res.data.refreshToken);
       }
       saveUser(res.data.user);
@@ -55,7 +64,8 @@ export function useAuth() {
     onSettled: () => {
       clearTokens();
       saveUser(null);
-      if (typeof window !== 'undefined') localStorage.removeItem(REFRESH_TOKEN_KEY);
+      if (typeof window !== "undefined")
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
       queryClient.setQueryData(USER_QUERY_KEY, null);
       queryClient.clear();
     },
