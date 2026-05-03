@@ -6,6 +6,8 @@ import { extendedApiClient } from '@/lib/api';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
 import { Package, Plus, Search, AlertTriangle } from 'lucide-react';
+import { Select } from '@/components/ui/select';
+import { UNIT_OPTIONS } from '@/hooks/use-select-options';
 
 export default function InventoryPage() {
   const [search, setSearch] = useState('');
@@ -37,7 +39,7 @@ export default function InventoryPage() {
           <form onSubmit={e => { e.preventDefault(); create.mutate({ ...form, qtyInHand: Number(form.qtyInHand), reorderLevel: Number(form.reorderLevel), unitCost: Number(form.unitCost) }); }}
             className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <input className="input-base sm:col-span-2" placeholder="Material name *" required value={form.materialName} onChange={e => setForm(p => ({ ...p, materialName: e.target.value }))} />
-            <input className="input-base" placeholder="Unit (bags, kg, pcs…) *" required value={form.unit} onChange={e => setForm(p => ({ ...p, unit: e.target.value }))} />
+            <Select options={UNIT_OPTIONS} value={form.unit} onChange={v => setForm(p => ({ ...p, unit: v }))} placeholder="Unit *" searchable={false} />
             <input className="input-base" type="number" placeholder="Qty in hand *" required value={form.qtyInHand} onChange={e => setForm(p => ({ ...p, qtyInHand: e.target.value }))} />
             <input className="input-base" type="number" placeholder="Reorder level" value={form.reorderLevel} onChange={e => setForm(p => ({ ...p, reorderLevel: e.target.value }))} />
             <input className="input-base" type="number" placeholder="Unit cost (BDT)" value={form.unitCost} onChange={e => setForm(p => ({ ...p, unitCost: e.target.value }))} />

@@ -6,12 +6,16 @@ import { apiV2 } from '@/lib/api';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Select } from '@/components/ui/select';
 import { FileText, Plus, PenLine } from 'lucide-react';
+import { useClientOptions, useProjectOptions } from '@/hooks/use-select-options';
 
 export default function ContractsPage() {
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: '', value: '', startDate: '', endDate: '', clientId: '' });
+  const [form, setForm] = useState({ title: '', value: '', startDate: '', endDate: '', clientId: '', projectId: '' });
   const qc = useQueryClient();
+  const { options: clientOptions, isLoading: cLoading } = useClientOptions();
+  const { options: projectOptions, isLoading: pLoading } = useProjectOptions();
   const { data, isLoading } = useQuery({ queryKey: ['contracts'], queryFn: apiV2.getContracts });
   const create = useMutation({ mutationFn: apiV2.createContract, onSuccess: () => { qc.invalidateQueries({ queryKey: ['contracts'] }); setShowForm(false); } });
   const sign = useMutation({ mutationFn: apiV2.signContract, onSuccess: () => qc.invalidateQueries({ queryKey: ['contracts'] }) });
@@ -23,12 +27,29 @@ export default function ContractsPage() {
         action={<button className="btn-primary flex items-center gap-2" onClick={() => setShowForm(v => !v)}><Plus size={16} />New Contract</button>} />
       {showForm && (
         <div className="card p-5">
-          <form onSubmit={e => { e.preventDefault(); create.mutate({ ...form, value: Number(form.value) }); }} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <form onSubmit={e => {
+            e.preventDefault();
+            create.mutate({
+              ...form,
+              value: Number(form.value),
+              clientId: form.clientId || undefined,
+              projectId: form.projectId || undefined,
+              startDate: form.startDate || undefined,
+              endDate: form.endDate || undefined,
+            });
+          }} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input className="input-base sm:col-span-2" placeholder="Contract title *" required value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
             <input className="input-base" type="number" placeholder="Contract value (BDT) *" required value={form.value} onChange={e => setForm(p => ({ ...p, value: e.target.value }))} />
-            <input className="input-base" placeholder="Client ID" value={form.clientId} onChange={e => setForm(p => ({ ...p, clientId: e.target.value }))} />
-            <input className="input-base" type="date" placeholder="Start date" value={form.startDate} onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} />
-            <input className="input-base" type="date" placeholder="End date" value={form.endDate} onChange={e => setForm(p => ({ ...p, endDate: e.target.value }))} />
+            <Select options={clientOptions} value={form.clientId} onChange={v => setForm(p => ({ ...p, clientId: v }))} placeholder="Client (optional)" loading={cLoading} clearable label="Client" />
+            <Select options={projectOptions} value={form.projectId} onChange={v => setForm(p => ({ ...p, projectId: v }))} placeholder="Project (optional)" loading={pLoading} clearable label="Project" />
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>Start Date</label>
+              <input className="input-base" type="date" value={form.startDate} onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-secondary)' }}>End Date</label>
+              <input className="input-base" type="date" value={form.endDate} onChange={e => setForm(p => ({ ...p, endDate: e.target.value }))} />
+            </div>
             <div className="sm:col-span-2 flex gap-2">
               <button type="submit" disabled={create.isPending} className="btn-primary">{create.isPending ? 'Creating…' : 'Create'}</button>
               <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>

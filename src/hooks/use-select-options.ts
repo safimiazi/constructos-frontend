@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { apiClient, apiV3, extendedApiClient } from '@/lib/api';
+import { apiClient, apiV2, apiV3, extendedApiClient } from '@/lib/api';
 import type { SelectOption } from '@/components/ui/select';
 
 // ─── Projects ─────────────────────────────────────────────────────────────────
@@ -139,6 +139,35 @@ export function useClientOptions() {
   return { options, isLoading };
 }
 
+// ─── GRNs ─────────────────────────────────────────────────────────────────────
+export function useGRNOptions(poId?: string) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['select-grns', poId],
+    queryFn: () => apiV2.getGRNs(poId),
+    staleTime: 30000,
+  });
+  const options: SelectOption[] = ((data?.data ?? data) as any[] ?? []).map((g: any) => ({
+    value: g.id,
+    label: `GRN-${g.id.slice(0, 8)} (${new Date(g.receivedDate ?? g.createdAt).toLocaleDateString()})`,
+  }));
+  return { options, isLoading };
+}
+
+// ─── Vendor Invoices ──────────────────────────────────────────────────────────
+export function useVendorInvoiceOptions() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['select-vendor-invoices'],
+    queryFn: () => apiClient.getInvoices({ type: 'vendor', limit: 200 } as any),
+    staleTime: 30000,
+  });
+  const options: SelectOption[] = (data?.data?.data ?? []).map((inv: any) => ({
+    value: inv.id,
+    label: `${inv.invoiceNumber} — ৳${Number(inv.totalAmount).toLocaleString()}`,
+    description: inv.status,
+  }));
+  return { options, isLoading };
+}
+
 // ─── Static option builders ───────────────────────────────────────────────────
 
 export const STATUS_OPTIONS: Record<string, SelectOption[]> = {
@@ -249,4 +278,25 @@ export const PLAN_TIER_OPTIONS: SelectOption[] = [
   { value: 'STARTER', label: 'Starter', description: '৳4,999/month' },
   { value: 'PROFESSIONAL', label: 'Professional', description: '৳14,999/month' },
   { value: 'ENTERPRISE', label: 'Enterprise', description: '৳39,999+/month' },
+];
+
+// ─── Unit Options ─────────────────────────────────────────────────────────────
+export const UNIT_OPTIONS: SelectOption[] = [
+  { value: 'pcs', label: 'Pcs (Pieces)' },
+  { value: 'kg', label: 'Kg (Kilogram)' },
+  { value: 'ton', label: 'Ton' },
+  { value: 'bag', label: 'Bag' },
+  { value: 'ltr', label: 'Ltr (Litre)' },
+  { value: 'mtr', label: 'Mtr (Metre)' },
+  { value: 'sqft', label: 'Sq.Ft' },
+  { value: 'sqm', label: 'Sq.M' },
+  { value: 'cft', label: 'CFT (Cubic Feet)' },
+  { value: 'rft', label: 'RFT (Running Feet)' },
+  { value: 'box', label: 'Box' },
+  { value: 'roll', label: 'Roll' },
+  { value: 'set', label: 'Set' },
+  { value: 'pair', label: 'Pair' },
+  { value: 'bundle', label: 'Bundle' },
+  { value: 'drum', label: 'Drum' },
+  { value: 'sheet', label: 'Sheet' },
 ];

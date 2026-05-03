@@ -7,7 +7,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Select } from '@/components/ui/select';
 import { DollarSign, Plus, Check, X } from 'lucide-react';
-import { useProjectOptions } from '@/hooks/use-select-options';
+import { useProjectOptions, useEmployeeOptions } from '@/hooks/use-select-options';
 
 const CATEGORY_OPTIONS = [
   { value: 'travel', label: 'Travel' },
@@ -30,9 +30,10 @@ const STATUS_OPTIONS = [
 export default function ExpensesPage() {
   const [showForm, setShowForm] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
-  const [form, setForm] = useState({ title: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'travel', notes: '', projectId: '' });
+  const [form, setForm] = useState({ title: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'travel', notes: '', projectId: '', employeeId: '' });
   const qc = useQueryClient();
   const { options: projectOptions, isLoading: pLoading } = useProjectOptions();
+  const { options: empOptions, isLoading: eLoading } = useEmployeeOptions();
   const { data, isLoading } = useQuery({ queryKey: ['expenses', statusFilter], queryFn: () => apiV4.getExpenses({ status: statusFilter || undefined }) });
   const create = useMutation({ mutationFn: apiV4.createExpense, onSuccess: () => { qc.invalidateQueries({ queryKey: ['expenses'] }); setShowForm(false); } });
   const approve = useMutation({ mutationFn: apiV4.approveExpense, onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }) });
@@ -52,8 +53,9 @@ export default function ExpensesPage() {
       )}
       {showForm && (
         <div className="card p-5">
-          <form onSubmit={e => { e.preventDefault(); create.mutate({ ...form, amount: Number(form.amount) }); }} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <form onSubmit={e => { e.preventDefault(); create.mutate({ ...form, amount: Number(form.amount), projectId: form.projectId || undefined, employeeId: form.employeeId || undefined }); }} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input className="input-base sm:col-span-2" placeholder="Title *" required value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
+            <Select options={empOptions} value={form.employeeId} onChange={v => setForm(p => ({ ...p, employeeId: v }))} placeholder="Employee *" loading={eLoading} clearable label="Employee" />
             <input className="input-base" type="number" placeholder="Amount (BDT) *" required value={form.amount} onChange={e => setForm(p => ({ ...p, amount: e.target.value }))} />
             <input className="input-base" type="date" required value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} />
             <Select options={CATEGORY_OPTIONS} value={form.category} onChange={v => setForm(p => ({ ...p, category: v }))} placeholder="Category" label="Category" searchable={false} />

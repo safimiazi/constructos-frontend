@@ -23,7 +23,7 @@ export default function HsePage() {
   const create = useMutation({ mutationFn: extendedApiClient.createIncident, onSuccess: () => { qc.invalidateQueries({ queryKey: ['incidents'] }); setShowForm(false); setForm(BLANK); } });
   const close = useMutation({ mutationFn: extendedApiClient.closeIncident, onSuccess: () => qc.invalidateQueries({ queryKey: ['incidents'] }) });
 
-  const incidents = (data?.data as any) ?? [];
+  const incidents: any[] = Array.isArray(data?.data) ? data.data : (data?.data as any)?.data ?? [];
   const totalOpen = incidents.filter((i: any) => i.status === 'open').length;
   const totalCritical = incidents.filter((i: any) => i.severity === 'critical').length;
 

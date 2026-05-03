@@ -8,7 +8,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Select } from '@/components/ui/select';
 import { ShoppingCart, Plus, Check } from 'lucide-react';
-import { useProjectOptions } from '@/hooks/use-select-options';
+import { useProjectOptions, UNIT_OPTIONS } from '@/hooks/use-select-options';
 
 const MR_STATUS_OPTIONS = [
   { value: '', label: 'All Status' },
@@ -52,7 +52,7 @@ export default function MaterialRequestsPage() {
                 <div key={i} className="grid grid-cols-4 gap-2 mb-2">
                   <input className="input-base col-span-2" placeholder="Material name *" required value={item.name} onChange={e => setForm(p => ({ ...p, items: p.items.map((it, j) => j === i ? { ...it, name: e.target.value } : it) }))} />
                   <input className="input-base" type="number" placeholder="Qty" value={item.qty} onChange={e => setForm(p => ({ ...p, items: p.items.map((it, j) => j === i ? { ...it, qty: Number(e.target.value) } : it) }))} />
-                  <input className="input-base" placeholder="Unit" value={item.unit} onChange={e => setForm(p => ({ ...p, items: p.items.map((it, j) => j === i ? { ...it, unit: e.target.value } : it) }))} />
+                  <Select options={UNIT_OPTIONS} value={item.unit} onChange={v => setForm(p => ({ ...p, items: p.items.map((it, j) => j === i ? { ...it, unit: v } : it) }))} placeholder="Unit" searchable={false} />
                 </div>
               ))}
               <button type="button" className="text-xs" style={{ color: 'var(--brand-500)' }} onClick={() => setForm(p => ({ ...p, items: [...p.items, { name: '', qty: 1, unit: 'pcs', estimatedCost: 0 }] }))}>+ Add item</button>

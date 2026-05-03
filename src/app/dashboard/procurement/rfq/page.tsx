@@ -8,7 +8,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Select } from '@/components/ui/select';
 import { ShoppingCart, Plus } from 'lucide-react';
-import { useVendorOptions } from '@/hooks/use-select-options';
+import { useVendorOptions, UNIT_OPTIONS } from '@/hooks/use-select-options';
 
 export default function RFQPage() {
   const [showForm, setShowForm] = useState(false);
@@ -37,7 +37,7 @@ export default function RFQPage() {
                 <div key={i} className="grid grid-cols-3 gap-2 mb-2">
                   <input className="input-base" placeholder="Description *" required value={item.description} onChange={e => setForm(p => ({ ...p, items: p.items.map((it, j) => j === i ? { ...it, description: e.target.value } : it) }))} />
                   <input className="input-base" type="number" placeholder="Qty" value={item.quantity} onChange={e => setForm(p => ({ ...p, items: p.items.map((it, j) => j === i ? { ...it, quantity: Number(e.target.value) } : it) }))} />
-                  <input className="input-base" placeholder="Unit" value={item.unit} onChange={e => setForm(p => ({ ...p, items: p.items.map((it, j) => j === i ? { ...it, unit: e.target.value } : it) }))} />
+                  <Select options={UNIT_OPTIONS} value={item.unit} onChange={v => setForm(p => ({ ...p, items: p.items.map((it, j) => j === i ? { ...it, unit: v } : it) }))} placeholder="Unit" searchable={false} />
                 </div>
               ))}
               <button type="button" className="text-xs" style={{ color: 'var(--brand-500)' }} onClick={() => setForm(p => ({ ...p, items: [...p.items, { description: '', quantity: 1, unit: 'pcs' }] }))}>+ Add item</button>
