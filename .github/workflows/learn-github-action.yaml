@@ -118,7 +118,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: constructos-frontend
-        run: npm i
+        run: npm i  
 
       # CONCEPT: Inject secrets as env vars at build time
       - name: Build Next.js app
